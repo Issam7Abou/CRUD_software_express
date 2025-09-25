@@ -1,4 +1,6 @@
-import readFile from "../utils/fileHandler.js";
+import { json } from "express";
+import { readFile , writeFile } from "../utils/fileHandler.js";
+import { validateTaskPayload, validateUpdatePayload} from "../utils/validateRequestBody.js";
 
 // @desc get all tasks
 // @Route GET - /api/tasks
@@ -21,14 +23,12 @@ const getTasks = async (req, res, next) => {
 const getTask = async (req, res, next) => {
     try {
         const id = Number(req.params.id);
-        console.log('o ID é: ', id);
         if(!isFinite(id)) {
             const err = new Error('Please provide a valid ID for task');
             err.status = 404;
             throw err;
         };
         const task = await readFile(id);
-        console.log('a task é no getTask: ', task);
         if(!task) {
             const err = new Error('The ID provided does not Exist');
             err.status = 404;
@@ -40,4 +40,43 @@ const getTask = async (req, res, next) => {
     }
 };
 
-export { getTasks, getTask };
+// @desc post a task
+// @Route POST - /api/tasks
+const postTask = async (req, res, next) => {
+    try {
+        const task = req.body;
+        if (!task) {
+            const err = new Error('Please provide JSON data to post a task');
+            err.status = 404;
+            throw err; 
+        }
+        const validator = validateTaskPayload(task);
+        if(!validator) {
+            const err = new Error('Please provide title & description of task in your JSON');
+            err.status = 404;
+            throw err; 
+        }
+        await writeFile(task);
+        res.status(201).json('New Task Posted'); 
+    } catch (error) {
+        next(error);
+    }
+};
+
+const updateTask = (req, res, next) => {
+    try {
+        const id = Number(req.params.id);
+        const task = req.body;
+        if(!validateUpdatePayload(task)) {
+            const err = new Error('Please provide atleast title OR description of task to UPDATE in your JSON');
+            err.status = 404;
+            throw err; 
+        }
+        
+        res.json('testing');
+    } catch (error) {
+        next(error);
+    }
+};
+
+export { getTasks, getTask, postTask, updateTask };
