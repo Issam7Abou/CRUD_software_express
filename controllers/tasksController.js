@@ -1,6 +1,6 @@
 import { json } from "express";
-import { readFile , writeFile } from "../utils/fileHandler.js";
-import { validateTaskPayload, validateUpdatePayload} from "../utils/validateRequestBody.js";
+import { readFile , writeFile, updateTaskFile, deleteTaskFile } from "../utils/fileHandler.js";
+import { validateTaskPayload, validateUpdatePayload } from "../utils/validateRequestBody.js";
 
 // @desc get all tasks
 // @Route GET - /api/tasks
@@ -63,7 +63,7 @@ const postTask = async (req, res, next) => {
     }
 };
 
-const updateTask = (req, res, next) => {
+const updateTask = async (req, res, next) => {
     try {
         const id = Number(req.params.id);
         const task = req.body;
@@ -72,11 +72,29 @@ const updateTask = (req, res, next) => {
             err.status = 404;
             throw err; 
         }
-        
-        res.json('testing');
+        await updateTaskFile(task, id);
+        const allTasks = await readFile();
+        res.status(200).json(allTasks);
     } catch (error) {
         next(error);
     }
 };
 
-export { getTasks, getTask, postTask, updateTask };
+const deleteTask = async (req, res, next) => {
+    try {
+        const id = Number(req.params.id);
+        if(!isFinite(id)) {
+            const err = new Error('Please provide a valid ID to delete Task');
+            err.status = 404;
+            throw err;
+        };
+        console.log('o ID é: ', id);
+        await deleteTaskFile(id);
+        const allTasks = await readFile();
+        res.status(200).json(allTasks);
+    } catch (error) {
+        next(error);
+    }
+};
+
+export { getTasks, getTask, postTask, updateTask, deleteTask };
