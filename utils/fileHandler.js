@@ -1,4 +1,5 @@
 import fs from 'fs/promises';
+import { findTaskByIdOrThrow , idCreator } from './idHandler.js';
 
 const filePath = './database/db.json';
 
@@ -9,7 +10,7 @@ const readFile = async (id) => {
         throw err;
     };
     const dadosJs = JSON.parse(data);
-    if(id) return dadosJs.find((task) => task.id === id);
+    if(id) return findTaskByIdOrThrow(id, dadosJs); 
     return dadosJs;
 };
 
@@ -20,6 +21,7 @@ const writeFile = async (task) => {
         throw err;
     };        
     const allTasks = JSON.parse(data);
+    idCreator(task);
     allTasks.push(task);
     console.log('writeFile :', allTasks);
     await fs.writeFile(filePath, JSON.stringify(allTasks, null, 2));
@@ -45,6 +47,7 @@ const deleteTaskFile = async (id) => {
         throw err;
     }; 
     const allTasks = JSON.parse(data);
+    findTaskByIdOrThrow(id, allTasks); 
     const newDb = allTasks.filter((task) => task.id !== id);
     await fs.writeFile(filePath, JSON.stringify(newDb, null, 2));
 };
